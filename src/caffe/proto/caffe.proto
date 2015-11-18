@@ -306,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 140 (last added: batch_norm_param)
+// LayerParameter next available layer-specific ID: 141 (last added: batch_norm_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -391,6 +391,7 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+  optional SimilarityLossParameter similarity_loss_param = 140;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1034,6 +1035,12 @@ message SPPParameter {
     CUDNN = 2;
   }
   optional Engine engine = 6 [default = DEFAULT];
+}
+
+message SimilarityLossParameter {
+  optional float alpha = 1 [default = 5.0];
+  optional float beta = 2 [default = 10.0];
+  optional float gamma = 3 [default = -0.277];
 }
 
 // DEPRECATED: use LayerParameter.
