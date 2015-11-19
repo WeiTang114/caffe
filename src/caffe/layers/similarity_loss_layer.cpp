@@ -52,12 +52,14 @@ void SimilarityLossLayer<Dtype>::Forward_cpu(
     Dtype dw = caffe_cpu_asum(dim, diff_.cpu_data() + (i*dim));
     bool similar = (static_cast<int>(bottom[2]->cpu_data()[i]) == 0);
     l1dists_.mutable_cpu_data()[i] = dw;
-    
+    //std::cout << "dw" << i << " " << dw << std::endl;
+
     if (similar) {
       //alpha * dist_sq_.cpu_data()
       loss += alpha * dw * dw;
     } else {
       loss += beta * exp(gamma * dw);
+      //loss += 0;
     }
   }
   loss = loss / static_cast<Dtype>(batch_size);
@@ -78,14 +80,15 @@ void SimilarityLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   for (int i = 0; i < batch_size; i++) {
     for (int j = 0; j < dim; j++) {
       int pos = i*dim + j;
-      diff_signs[pos] = (diff_.cpu_data()[pos] >= 0) ? 1 : -1; 
+      diff_signs[pos] = (diff_.cpu_data()[pos] >= 0) ? 1.0 : -1.0; 
     }
   }
 
   for (int i = 0; i < 2; i++) {
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
-      const Dtype coeff = sign * top[0]->cpu_diff()[0];
+      const Dtype coeff = sign * top[0]->cpu_diff()[0] / batch_size;
+      //std::cout << "loss_weight:" << top[0]->cpu_diff()[0] << std::endl;
       for (int j = 0; j < batch_size; j++) {
         Dtype l1dist = l1dists_.cpu_data()[j];
         Dtype* bout = bottom[i]->mutable_cpu_diff();
@@ -103,7 +106,7 @@ void SimilarityLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           Dtype the_exp = exp(gamma * l1dist);
           caffe_cpu_axpby(
               dim,
-              beta * gamma * coeff * l1dist * the_exp,
+              beta * gamma * coeff * the_exp,
               diff_signs + (j*dim),
               Dtype(0.0),
               bout + (j*dim));
